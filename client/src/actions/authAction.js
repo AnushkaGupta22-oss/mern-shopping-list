@@ -12,7 +12,7 @@ export const loadUser =  () => (dispatch, getState) => {
     axios.get('/api/auth/user', tokenConfig(getState) )
     .then(res => dispatch({
         type: USER_LOADED,
-        payload: res.data
+        payload: res.data       
     }))
     .catch(err => {
         dispatch(returnErrors(err.response.data, err.response.status));
@@ -21,23 +21,94 @@ export const loadUser =  () => (dispatch, getState) => {
         });
     });
 };
+
+//Register User
+export const register = ({name, email, password }) => dispatch => {
+    //Headers
+    const config = {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+    //Request Body
+    const body = JSON.stringify({ name , email , password});
+
+    axios.post('/api/users', body, config)
+    .then(res => {
+    console.log(res.data);
+
+    dispatch({
+        type: REGISTER_SUCCESS,
+        payload: res.data
+     });
+   })
+    .catch(err => {
+        dispatch(returnErrors(err.response.data, err.response.status, 'REGISTER_FAIL'));
+
+        dispatch({
+            type: REGISTER_FAIL
+        });
+    });
+};
+//Login User
+export const login = ({ email, password }) => dispatch => {
+    //Headers
+    const config = {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+    //Request Body
+    const body = JSON.stringify({  email , password});
+
+    axios.post('/api/auth', body, config)
+    .then(res => {
+    console.log(res.data);
+
+    dispatch({
+        type: LOGIN_SUCCESS,
+        payload: res.data
+     });
+     dispatch(loadUser());
+   })
+    .catch(err => {
+        dispatch(returnErrors(err.response.data, err.response.status, 'LOGIN_FAIL'));
+
+        dispatch({
+            type: LOGIN_FAIL
+        });
+    });
+};
+
+//Logout User
+export const logout = () => {
+    console.log("LOGOUT CLICKED");
+
+    return {
+        type: LOGOUT_SUCCESS
+    };
+};
+
 //setup config/headers and token
 export const tokenConfig = getState => {
-    //Get token from localstorage
+
+    console.log("FULL STATE:", getState());
+
     const token = getState().auth.token;
 
-    //Headers
-    const config ={
+    console.log("TOKEN FROM STATE:", token);
+
+    const config = {
         headers: {
             "Content-Type": "application/json"
         }
+    };
+
+    if (token) {
+        config.headers["x-auth-token"] = token;
     }
 
-    //if token, add to headers
-    if(token){
-        config.headers['x-auth-token'] = token;
+    console.log("CONFIG:", config);
 
-    }
     return config;
-
 }

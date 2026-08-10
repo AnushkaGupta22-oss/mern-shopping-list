@@ -1,36 +1,41 @@
 import axios from 'axios';
 import { DELETE_ITEM, GET_ITEMS, ADD_ITEM, ITEMS_LOADING } from "./type";
+import { tokenConfig } from './authAction';
+import { returnErrors } from './errorAction';
 
 export const getItems = () => dispatch => {
   dispatch(setItemsLoading());
   axios
-   .get('./api/item')
+   .get('/api/item')
    .then(res => 
      dispatch({
       type: GET_ITEMS,
       payload: res.data
 
-    })
+    }))
+    .catch( err => dispatch(returnErrors(err.response.data, err.response.status ))
   );
 };
-export const addItem = (item ) => dispatch => {
+export const addItem = (item ) => (dispatch, getState) => {
  axios  
-    .post('./api/item', item)
+    .post('/api/item', item, tokenConfig(getState))
     .then(res => 
       dispatch({
         type: ADD_ITEM,
         payload: res.data
       })
-    );
+    ).catch( err => dispatch(returnErrors(err.response.data, err.response.status ))
+  );
 };
-export const deleteItems = (id) => dispatch => {
- axios
-  .delete(`./api/item/${id}`)
+export const deleteItems = (id) => (dispatch, getState ) => {
+ axios  
+  .delete(`/api/item/${id}`, tokenConfig(getState))
   .then(res => 
    dispatch({
      type: DELETE_ITEM,
      payload: id
   })
+  ).catch( err => dispatch(returnErrors(err.response.data, err.response.status ))
   );
 };
 
