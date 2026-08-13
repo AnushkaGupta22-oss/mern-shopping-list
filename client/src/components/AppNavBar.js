@@ -16,6 +16,9 @@ import RegisterModal from "./auth/RegisterModal";
 import LoginModal from "./auth/LoginModal";
 import Logout from "./auth/Logout";
 
+// Testing Git Diff
+
+
 class AppNavBar extends Component {
   state = {
     isOpen: false
