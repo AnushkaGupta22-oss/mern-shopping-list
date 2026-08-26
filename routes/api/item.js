@@ -4,36 +4,82 @@ const router = express.Router();
 // Item model
 const Item = require('../../models/items');
 
-// @route GET request to API/item
-// @desc Get all items
-// @access Public
-router.get('/', (req, res) => {
-    Item.find()
-        .sort({ date: -1 })
-        .then(items => res.json(items));
-});
+// Auth middleware
+const auth = require('../../middleware/auth');
 
-// @route POST to API/item
-// @desc Create an item
-// @access Public
-router.post('/', (req, res) => {
-    const newItem = new Item({
-        name: req.body.name
-    });
 
-    newItem.save()
-        .then(item => res.json(item));
-});
-
-// @route DELETE to API/item/:id
-// @desc Delete an item
-// @access Public
-router.delete('/:id', async (req, res) => {
+// @route   GET api/item
+// @desc    Get only logged-in user's items
+// @access  Private
+router.get('/', auth, async (req, res) => {
     try {
-        await Item.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
+        const items = await Item.find({
+            user: req.user.id
+        }).sort({ date: -1 });
+
+        res.json(items);
+
     } catch (err) {
-        res.status(404).json({ success: false });
+        res.status(500).json({
+            msg: 'Server Error'
+        });
     }
 });
+
+
+// @route   POST api/item
+// @desc    Create an item for logged-in user
+// @access  Private
+router.post('/', auth, async (req, res) => {
+    try {
+
+        const newItem = new Item({
+            name: req.body.name,
+            user: req.user.id
+        });
+
+        const item = await newItem.save();
+
+        res.json(item);
+
+    } catch (err) {
+        res.status(500).json({
+            msg: 'Server Error'
+        });
+    }
+});
+
+
+// @route   DELETE api/item/:id
+// @desc    Delete only logged-in user's item
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+    try {
+
+        const item = await Item.findOne({
+            _id: req.params.id,
+            user: req.user.id
+        });
+
+        if (!item) {
+            return res.status(404).json({
+                msg: 'Item not found or unauthorized'
+            });
+        }
+
+        await Item.findByIdAndDelete(req.params.id);
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            msg: 'Server Error'
+        });
+    }
+});
+
+
 module.exports = router;
