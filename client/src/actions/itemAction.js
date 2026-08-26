@@ -3,18 +3,20 @@ import { DELETE_ITEM, GET_ITEMS, ADD_ITEM, ITEMS_LOADING } from "./type";
 import { tokenConfig } from './authAction';
 import { returnErrors } from './errorAction';
 
-export const getItems = () => dispatch => {
+export const getItems = () => (dispatch, getState) => {
   dispatch(setItemsLoading());
-  axios
-   .get('/api/item')
-   .then(res => 
-     dispatch({
-      type: GET_ITEMS,
-      payload: res.data
 
-    }))
-    .catch( err => dispatch(returnErrors(err.response.data, err.response.status ))
-  );
+  axios
+    .get('/api/item', tokenConfig(getState))
+    .then(res =>
+      dispatch({
+        type: GET_ITEMS,
+        payload: res.data
+      })
+    )
+    .catch(err =>
+      dispatch(returnErrors(err.response.data, err.response.status))
+    );
 };
 export const addItem = (item ) => (dispatch, getState) => {
  axios  
